@@ -33,6 +33,7 @@ from utils.config import Config
 from utils.trainer import ModelTrainer
 from models.architectures import KPFCNN
 
+import argparse
 
 # ----------------------------------------------------------------------------------------------------------------------
 #
@@ -192,12 +193,18 @@ if __name__ == '__main__':
     ############################
     # Initialize the environment
     ############################
+    parser = argparse.ArgumentParser(description='Point Cloud Segmentation')
+    # ----------------- Log related
+    parser.add_argument('--GPU_ID', type=str, default=0)
+    parser.add_argument('--data_dir', type=str, default='/data/3D/Stanford3dDataset_v1.2',
+                        help='the dir of data')
+    args = parser.parse_args()
 
     # Set which gpu is going to be used
-    GPU_ID = '0'
+    GPU_ID = args.GPU_ID
 
     # Set GPU visible device
-    os.environ['CUDA_VISIBLE_DEVICES'] = GPU_ID
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU_ID
 
     ###############
     # Previous chkp
@@ -244,8 +251,8 @@ if __name__ == '__main__':
         config.saving_path = sys.argv[1]
 
     # Initialize datasets
-    training_dataset = S3DISDataset(config, set='training', use_potentials=True)
-    test_dataset = S3DISDataset(config, set='validation', use_potentials=True)
+    training_dataset = S3DISDataset(config, set='training', use_potentials=True, data_dir=args.data_dir)
+    test_dataset = S3DISDataset(config, set='validation', use_potentials=True, data_dir=args.data_dir)
 
     # Initialize samplers
     training_sampler = S3DISSampler(training_dataset)

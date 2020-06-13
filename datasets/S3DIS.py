@@ -53,7 +53,7 @@ from utils.config import bcolors
 class S3DISDataset(PointCloudDataset):
     """Class to handle S3DIS dataset."""
 
-    def __init__(self, config, set='training', use_potentials=True, load_data=True):
+    def __init__(self, config, set='training', use_potentials=True, load_data=True, data_dir='/data/3D/Stanford3dDataset_v1.2'):
         """
         This dataset is small enough to be stored in-memory, so load all point clouds here
         """
@@ -85,7 +85,7 @@ class S3DISDataset(PointCloudDataset):
         self.ignored_labels = np.array([])
 
         # Dataset folder
-        self.path = '../../Data/S3DIS'
+        self.path = data_dir
 
         # Type of task conducted on this dataset
         self.dataset_task = 'cloud_segmentation'
