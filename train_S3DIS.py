@@ -195,7 +195,7 @@ if __name__ == '__main__':
     ############################
     parser = argparse.ArgumentParser(description='Point Cloud Segmentation')
     # ----------------- Log related
-    parser.add_argument('--GPU_ID', type=str, default=0)
+    parser.add_argument('--GPU_ID', type=str, default='0')
     parser.add_argument('--data_dir', type=str, default='/data/3D/Stanford3dDataset_v1.2',
                         help='the dir of data')
     args = parser.parse_args()
