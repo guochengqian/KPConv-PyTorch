@@ -32,8 +32,10 @@ from torch.utils.data import DataLoader
 from utils.config import Config
 from utils.trainer import ModelTrainer
 from models.architectures import KPFCNN
+from models.deepgcn import DeepGCN
 
 import argparse
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 #
@@ -133,9 +135,9 @@ class S3DISConfig(Config):
     # 'point2point' fitting geometry by penalizing distance from deform point to input points
     # 'point2plane' fitting geometry by penalizing distance from deform point to input point triplet (not implemented)
     deform_fitting_mode = 'point2point'
-    deform_fitting_power = 1.0              # Multiplier for the fitting/repulsive loss
-    deform_lr_factor = 0.1                  # Multiplier for learning rate applied to the deformations
-    repulse_extent = 1.2                    # Distance of repulsion for deformed kernel points
+    deform_fitting_power = 1.0  # Multiplier for the fitting/repulsive loss
+    deform_lr_factor = 0.1  # Multiplier for learning rate applied to the deformations
+    repulse_extent = 1.2  # Distance of repulsion for deformed kernel points
 
     #####################
     # Training parameters
@@ -198,6 +200,8 @@ if __name__ == '__main__':
     parser.add_argument('--GPU_ID', type=str, default='0')
     parser.add_argument('--data_dir', type=str, default='/data/3D/Stanford3dDataset_v1.2',
                         help='the dir of data')
+    parser.add_argument('--model', type=str, default='kpconv',
+                        help='kpconv / deepgcn')
     args = parser.parse_args()
 
     # Set which gpu is going to be used
@@ -286,7 +290,10 @@ if __name__ == '__main__':
 
     # Define network model
     t1 = time.time()
-    net = KPFCNN(config, training_dataset.label_values, training_dataset.ignored_labels)
+    if args.model.lower() == 'kpconv':
+        net = KPFCNN(config, training_dataset.label_values, training_dataset.ignored_labels)
+    elif args.model.lower() == 'deepgcn':
+        net = DeepGCN(config)
 
     debug = False
     if debug:

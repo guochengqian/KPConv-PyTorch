@@ -187,6 +187,24 @@ class Config:
     saving = True
     saving_path = None
 
+    # DeepGCN parameters
+    in_channels = 5
+    n_classes = 13
+    n_filters = 64
+
+    block = 'res'
+    conv = 'edge'
+    k = 16
+    act = 'relu'
+    norm = 'batch'
+    bias = True
+
+    stochastic = True
+    epsilon = 0.2
+    dropout = 0.3
+
+    n_blocks = 28
+
     def __init__(self):
         """
         Class Initialyser
@@ -344,7 +362,6 @@ class Config:
                 text_file.write(' {:d}:{:f}'.format(e, d))
             text_file.write('\n')
             text_file.write('grad_clip_norm = {:f}\n\n'.format(self.grad_clip_norm))
-
 
             text_file.write('augment_symmetries =')
             for a in self.augment_symmetries:

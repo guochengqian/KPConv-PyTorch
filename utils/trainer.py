@@ -86,7 +86,7 @@ class ModelTrainer:
 
         # Choose to train on CPU or GPU
         if on_gpu and torch.cuda.is_available():
-            self.device = torch.device("cuda:0")
+            self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
         net.to(self.device)
@@ -115,6 +115,7 @@ class ModelTrainer:
                 config.saving_path = time.strftime('results/Log_%Y-%m-%d_%H-%M-%S', time.gmtime())
             if not exists(config.saving_path):
                 makedirs(config.saving_path)
+                print('creating folder at {}'.format(config.saving_path))
             config.save()
 
         return
