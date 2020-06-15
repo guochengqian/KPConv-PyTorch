@@ -250,10 +250,6 @@ if __name__ == '__main__':
         config.load(os.path.join('results', previous_training_path))
         config.saving_path = None
 
-    # Get path from argument if given
-    if len(sys.argv) > 1:
-        config.saving_path = sys.argv[1]
-
     # Initialize datasets
     training_dataset = S3DISDataset(config, set='training', use_potentials=True, data_dir=args.data_dir)
     test_dataset = S3DISDataset(config, set='validation', use_potentials=True, data_dir=args.data_dir)
