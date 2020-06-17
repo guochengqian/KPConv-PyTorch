@@ -204,8 +204,6 @@ class Config:
     epsilon = 0.2
     dropout = 0.3
 
-
-
     def __init__(self):
         """
         Class Initialyser
