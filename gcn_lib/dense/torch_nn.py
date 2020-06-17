@@ -198,7 +198,7 @@ class Conv1dLayer(Seq):
                 nn.init.kaiming_normal_(m.weight)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
-            elif isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.InstanceNorm2d):
+            elif isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.InstanceNorm1d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
