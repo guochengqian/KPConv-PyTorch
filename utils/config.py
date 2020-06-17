@@ -191,6 +191,7 @@ class Config:
     in_channels = 5
     n_classes = 13
     n_filters = 64   # todo: for debugging.
+    n_blocks = 14   # resGCN-14.
 
     block = 'res'
     conv = 'edge'
@@ -203,7 +204,7 @@ class Config:
     epsilon = 0.2
     dropout = 0.3
 
-    n_blocks = 28
+
 
     def __init__(self):
         """
