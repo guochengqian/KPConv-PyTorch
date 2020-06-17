@@ -327,35 +327,36 @@ class ModelTrainer:
         mean_dt = np.zeros(1)
 
         # Start validation loop
-        for batch in val_loader:
+        with torch.no_grad():
+            for batch in val_loader:
 
-            # New time
-            t = t[-1:]
-            t += [time.time()]
+                # New time
+                t = t[-1:]
+                t += [time.time()]
 
-            if 'cuda' in self.device.type:
-                batch.to(self.device)
+                if 'cuda' in self.device.type:
+                    batch.to(self.device)
 
-            # Forward pass
-            outputs = net(batch, config)
+                # Forward pass
+                outputs = net(batch, config)
 
-            # Get probs and labels
-            probs += [softmax(outputs).cpu().detach().numpy()]
-            targets += [batch.labels.cpu().numpy()]
-            obj_inds += [batch.model_inds.cpu().numpy()]
-            torch.cuda.synchronize(self.device)
+                # Get probs and labels
+                probs += [softmax(outputs).cpu().detach().numpy()]
+                targets += [batch.labels.cpu().numpy()]
+                obj_inds += [batch.model_inds.cpu().numpy()]
+                torch.cuda.synchronize(self.device)
 
-            # Average timing
-            t += [time.time()]
-            mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+                # Average timing
+                t += [time.time()]
+                mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
 
-            # Display
-            if (t[-1] - last_display) > 1.0:
-                last_display = t[-1]
-                message = 'Validation : {:.1f}% (timings : {:4.2f} {:4.2f})'
-                print(message.format(100 * len(obj_inds) / config.validation_size,
-                                     1000 * (mean_dt[0]),
-                                     1000 * (mean_dt[1])))
+                # Display
+                if (t[-1] - last_display) > 1.0:
+                    last_display = t[-1]
+                    message = 'Validation : {:.1f}% (timings : {:4.2f} {:4.2f})'
+                    print(message.format(100 * len(obj_inds) / config.validation_size,
+                                         1000 * (mean_dt[0]),
+                                         1000 * (mean_dt[1])))
 
         # Stack all validation predictions
         probs = np.vstack(probs)
@@ -466,58 +467,59 @@ class ModelTrainer:
         t1 = time.time()
 
         # Start validation loop
-        for i, batch in enumerate(val_loader):
+        with torch.no_grad():
+            for i, batch in enumerate(val_loader):
 
-            # New time
-            t = t[-1:]
-            t += [time.time()]
+                # New time
+                t = t[-1:]
+                t += [time.time()]
 
-            if 'cuda' in self.device.type:
-                batch.to(self.device)
+                if 'cuda' in self.device.type:
+                    batch.to(self.device)
 
-            # Forward pass
-            outputs = net(batch, config)
+                # Forward pass
+                outputs = net(batch, config)
 
-            # Get probs and labels
-            stacked_probs = softmax(outputs).cpu().detach().numpy()
-            labels = batch.labels.cpu().numpy()
-            lengths = batch.lengths[0].cpu().numpy()
-            in_inds = batch.input_inds.cpu().numpy()
-            cloud_inds = batch.cloud_inds.cpu().numpy()
-            torch.cuda.synchronize(self.device)
+                # Get probs and labels
+                stacked_probs = softmax(outputs).cpu().detach().numpy()
+                labels = batch.labels.cpu().numpy()
+                lengths = batch.lengths[0].cpu().numpy()
+                in_inds = batch.input_inds.cpu().numpy()
+                cloud_inds = batch.cloud_inds.cpu().numpy()
+                torch.cuda.synchronize(self.device)
 
-            # Get predictions and labels per instance
-            # ***************************************
+                # Get predictions and labels per instance
+                # ***************************************
 
-            i0 = 0
-            for b_i, length in enumerate(lengths):
+                i0 = 0
+                for b_i, length in enumerate(lengths):
 
-                # Get prediction
-                target = labels[i0:i0 + length]
-                probs = stacked_probs[i0:i0 + length]
-                inds = in_inds[i0:i0 + length]
-                c_i = cloud_inds[b_i]
+                    # Get prediction
+                    target = labels[i0:i0 + length]
+                    probs = stacked_probs[i0:i0 + length]
+                    inds = in_inds[i0:i0 + length]
+                    c_i = cloud_inds[b_i]
 
-                # Update current probs in whole cloud
-                self.validation_probs[c_i][inds] = val_smooth * self.validation_probs[c_i][inds] \
-                                                   + (1 - val_smooth) * probs
+                    # Update current probs in whole cloud
+                    self.validation_probs[c_i][inds] = val_smooth * self.validation_probs[c_i][inds] \
+                                                       + (1 - val_smooth) * probs
 
-                # Stack all prediction for this epoch
-                predictions.append(probs)
-                targets.append(target)
-                i0 += length
+                    # Stack all prediction for this epoch
+                    predictions.append(probs)
+                    targets.append(target)
+                    i0 += length
 
-            # Average timing
-            t += [time.time()]
-            mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+                # Average timing
+                t += [time.time()]
+                mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
 
-            # Display
-            if (t[-1] - last_display) > 1.0:
-                last_display = t[-1]
-                message = 'Validation : {:.1f}% (timings : {:4.2f} {:4.2f})'
-                print(message.format(100 * i / config.validation_size,
-                                     1000 * (mean_dt[0]),
-                                     1000 * (mean_dt[1])))
+                # Display
+                if (t[-1] - last_display) > 1.0:
+                    last_display = t[-1]
+                    message = 'Validation : {:.1f}% (timings : {:4.2f} {:4.2f})'
+                    print(message.format(100 * i / config.validation_size,
+                                         1000 * (mean_dt[0]),
+                                         1000 * (mean_dt[1])))
 
         t2 = time.time()
 
@@ -697,100 +699,101 @@ class ModelTrainer:
         t1 = time.time()
 
         # Start validation loop
-        for i, batch in enumerate(val_loader):
+        with torch.no_grad():
+            for i, batch in enumerate(val_loader):
 
-            # New time
-            t = t[-1:]
-            t += [time.time()]
+                # New time
+                t = t[-1:]
+                t += [time.time()]
 
-            if 'cuda' in self.device.type:
-                batch.to(self.device)
+                if 'cuda' in self.device.type:
+                    batch.to(self.device)
 
-            # Forward pass
-            outputs = net(batch, config)
+                # Forward pass
+                outputs = net(batch, config)
 
-            # Get probs and labels
-            stk_probs = softmax(outputs).cpu().detach().numpy()
-            lengths = batch.lengths[0].cpu().numpy()
-            f_inds = batch.frame_inds.cpu().numpy()
-            r_inds_list = batch.reproj_inds
-            r_mask_list = batch.reproj_masks
-            labels_list = batch.val_labels
-            torch.cuda.synchronize(self.device)
+                # Get probs and labels
+                stk_probs = softmax(outputs).cpu().detach().numpy()
+                lengths = batch.lengths[0].cpu().numpy()
+                f_inds = batch.frame_inds.cpu().numpy()
+                r_inds_list = batch.reproj_inds
+                r_mask_list = batch.reproj_masks
+                labels_list = batch.val_labels
+                torch.cuda.synchronize(self.device)
 
-            # Get predictions and labels per instance
-            # ***************************************
+                # Get predictions and labels per instance
+                # ***************************************
 
-            i0 = 0
-            for b_i, length in enumerate(lengths):
+                i0 = 0
+                for b_i, length in enumerate(lengths):
 
-                # Get prediction
-                probs = stk_probs[i0:i0 + length]
-                proj_inds = r_inds_list[b_i]
-                proj_mask = r_mask_list[b_i]
-                frame_labels = labels_list[b_i]
-                s_ind = f_inds[b_i, 0]
-                f_ind = f_inds[b_i, 1]
+                    # Get prediction
+                    probs = stk_probs[i0:i0 + length]
+                    proj_inds = r_inds_list[b_i]
+                    proj_mask = r_mask_list[b_i]
+                    frame_labels = labels_list[b_i]
+                    s_ind = f_inds[b_i, 0]
+                    f_ind = f_inds[b_i, 1]
 
-                # Project predictions on the frame points
-                proj_probs = probs[proj_inds]
+                    # Project predictions on the frame points
+                    proj_probs = probs[proj_inds]
 
-                # Safe check if only one point:
-                if proj_probs.ndim < 2:
-                    proj_probs = np.expand_dims(proj_probs, 0)
+                    # Safe check if only one point:
+                    if proj_probs.ndim < 2:
+                        proj_probs = np.expand_dims(proj_probs, 0)
 
-                # Insert false columns for ignored labels
-                for l_ind, label_value in enumerate(val_loader.dataset.label_values):
-                    if label_value in val_loader.dataset.ignored_labels:
-                        proj_probs = np.insert(proj_probs, l_ind, 0, axis=1)
+                    # Insert false columns for ignored labels
+                    for l_ind, label_value in enumerate(val_loader.dataset.label_values):
+                        if label_value in val_loader.dataset.ignored_labels:
+                            proj_probs = np.insert(proj_probs, l_ind, 0, axis=1)
 
-                # Predicted labels
-                preds = val_loader.dataset.label_values[np.argmax(proj_probs, axis=1)]
+                    # Predicted labels
+                    preds = val_loader.dataset.label_values[np.argmax(proj_probs, axis=1)]
 
-                # Save predictions in a binary file
-                filename = '{:s}_{:07d}.npy'.format(val_loader.dataset.sequences[s_ind], f_ind)
-                filepath = join(config.saving_path, 'val_preds', filename)
-                if exists(filepath):
-                    frame_preds = np.load(filepath)
-                else:
-                    frame_preds = np.zeros(frame_labels.shape, dtype=np.uint8)
-                frame_preds[proj_mask] = preds.astype(np.uint8)
-                np.save(filepath, frame_preds)
+                    # Save predictions in a binary file
+                    filename = '{:s}_{:07d}.npy'.format(val_loader.dataset.sequences[s_ind], f_ind)
+                    filepath = join(config.saving_path, 'val_preds', filename)
+                    if exists(filepath):
+                        frame_preds = np.load(filepath)
+                    else:
+                        frame_preds = np.zeros(frame_labels.shape, dtype=np.uint8)
+                    frame_preds[proj_mask] = preds.astype(np.uint8)
+                    np.save(filepath, frame_preds)
 
-                # Save some of the frame pots
-                if f_ind % 20 == 0:
-                    seq_path = join(val_loader.dataset.path, 'sequences', val_loader.dataset.sequences[s_ind])
-                    velo_file = join(seq_path, 'velodyne', val_loader.dataset.frames[s_ind][f_ind] + '.bin')
-                    frame_points = np.fromfile(velo_file, dtype=np.float32)
-                    frame_points = frame_points.reshape((-1, 4))
-                    write_ply(filepath[:-4] + '_pots.ply',
-                              [frame_points[:, :3], frame_labels, frame_preds],
-                              ['x', 'y', 'z', 'gt', 'pre'])
+                    # Save some of the frame pots
+                    if f_ind % 20 == 0:
+                        seq_path = join(val_loader.dataset.path, 'sequences', val_loader.dataset.sequences[s_ind])
+                        velo_file = join(seq_path, 'velodyne', val_loader.dataset.frames[s_ind][f_ind] + '.bin')
+                        frame_points = np.fromfile(velo_file, dtype=np.float32)
+                        frame_points = frame_points.reshape((-1, 4))
+                        write_ply(filepath[:-4] + '_pots.ply',
+                                  [frame_points[:, :3], frame_labels, frame_preds],
+                                  ['x', 'y', 'z', 'gt', 'pre'])
 
-                # Update validation confusions
-                frame_C = fast_confusion(frame_labels,
-                                         frame_preds.astype(np.int32),
-                                         val_loader.dataset.label_values)
-                val_loader.dataset.val_confs[s_ind][f_ind, :, :] = frame_C
+                    # Update validation confusions
+                    frame_C = fast_confusion(frame_labels,
+                                             frame_preds.astype(np.int32),
+                                             val_loader.dataset.label_values)
+                    val_loader.dataset.val_confs[s_ind][f_ind, :, :] = frame_C
 
-                # Stack all prediction for this epoch
-                predictions += [preds]
-                targets += [frame_labels[proj_mask]]
-                inds += [f_inds[b_i, :]]
-                val_i += 1
-                i0 += length
+                    # Stack all prediction for this epoch
+                    predictions += [preds]
+                    targets += [frame_labels[proj_mask]]
+                    inds += [f_inds[b_i, :]]
+                    val_i += 1
+                    i0 += length
 
-            # Average timing
-            t += [time.time()]
-            mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+                # Average timing
+                t += [time.time()]
+                mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
 
-            # Display
-            if (t[-1] - last_display) > 1.0:
-                last_display = t[-1]
-                message = 'Validation : {:.1f}% (timings : {:4.2f} {:4.2f})'
-                print(message.format(100 * i / config.validation_size,
-                                     1000 * (mean_dt[0]),
-                                     1000 * (mean_dt[1])))
+                # Display
+                if (t[-1] - last_display) > 1.0:
+                    last_display = t[-1]
+                    message = 'Validation : {:.1f}% (timings : {:4.2f} {:4.2f})'
+                    print(message.format(100 * i / config.validation_size,
+                                         1000 * (mean_dt[0]),
+                                         1000 * (mean_dt[1])))
 
         t2 = time.time()
 
