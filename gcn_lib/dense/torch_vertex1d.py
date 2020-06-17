@@ -74,7 +74,7 @@ class EdgeConv1d(nn.Module):
         s_pts = torch.cat((x, torch.zeros_like(x[:1, :]) + 1e6), 0)
 
         # Get neighbor points [n_points, n_neighbors, dim]
-        x_j = s_pts[edge_index[0], :].transpose(1, 2).contiguous()
+        x_j = s_pts[edge_index[0], :].contiguous().transpose(1, 2)
 
         aggr_out, _ = self.aggr(self.nn(torch.cat([x_i, x_j - x_i], dim=1)), -1, keepdim=False)
         return aggr_out
