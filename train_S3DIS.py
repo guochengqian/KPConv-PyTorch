@@ -289,7 +289,7 @@ if __name__ == '__main__':
     if args.model.lower() == 'kpconv':
         net = KPFCNN(config, training_dataset.label_values, training_dataset.ignored_labels)
     elif args.model.lower() == 'deepgcn':
-        net = DeepGCN(config)
+        net = DeepGCN(config, training_dataset.label_values, training_dataset.ignored_labels)
 
     debug = False
     if debug:

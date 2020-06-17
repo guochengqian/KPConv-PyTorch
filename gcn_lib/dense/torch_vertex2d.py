@@ -439,13 +439,13 @@ class DenseDynBlock2d(nn.Module):
         return torch.cat((x, dense), 1)
 
 
-class GraphPooling(nn.Module):
+class GraphPool2d(nn.Module):
     """
     Dense Dynamic graph pooling block
     """
 
     def __init__(self, in_channels, ratio=0.5, conv='edge', **kwargs):
-        super(GraphPooling, self).__init__()
+        super(GraphPool2d, self).__init__()
         self.gnn = DynConv2d(in_channels, 1, conv=conv, **kwargs)
         self.ratio = ratio
 
@@ -456,9 +456,9 @@ class GraphPooling(nn.Module):
         return torch.gather(x, 2, indices.repeat(1, x.shape[1], 1, 1))
 
 
-class VLADPool(torch.nn.Module):
+class VLADPool2d(torch.nn.Module):
     def __init__(self, in_channels, num_clusters=64, alpha=100.0):
-        super(VLADPool, self).__init__()
+        super(VLADPool2d, self).__init__()
         self.in_channels = in_channels
         self.num_clusters = num_clusters
         self.alpha = alpha

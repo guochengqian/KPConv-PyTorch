@@ -697,8 +697,8 @@ def experiment_name_1():
     """
 
     # Using the dates of the logs, you can easily gather consecutive ones. All logs should be of the same dataset.
-    start = 'Log_2020-04-22_11-52-58'
-    end = 'Log_2020-05-22_11-52-58'
+    start = 'Log_2020-04-04_10-04-42'
+    end = 'Log_2020-04-04_10-04-42'
 
     # Name of the result path
     res_path = 'results'

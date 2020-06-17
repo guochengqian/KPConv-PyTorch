@@ -3,6 +3,9 @@
 
 Created by Hugues THOMAS
 
+# todo:
+1. understand the preprocessing and postprocessing. 
+2. The data format (batch) and the precomputed neighbors 
 ## Introduction
 
 This repository contains the implementation of **Kernel Point Convolution** (KPConv) in [PyTorch](https://pytorch.org/).

@@ -1,61 +1,71 @@
 import torch
-from gcn_lib.dense import MLP2dLayer, GraphConv2d, PlainDynBlock2d, ResDynBlock2d, DenseDynBlock2d, DilatedKNN2d
+from gcn_lib.dense import MLP1dLayer, DilatedKNN2d
+from gcn_lib.dense.torch_vertex1d import GraphConv1d, DenseGraphBlock1d, ResGraphBlock1d, PlainGraphBlock1d
 from torch.nn import Sequential as Seq
+import numpy as np
 
 
 class DeepGCN(torch.nn.Module):
-    def __init__(self, args):
+    def __init__(self, config, lbl_values, ign_lbls):
         super(DeepGCN, self).__init__()
-        in_channels = args.in_channels
-        n_classes = args.n_classes
-        channels = args.n_filters
-        block = args.block
-        conv = args.conv
+        in_channels = config.in_channels
+        n_classes = config.n_classes
+        channels = config.n_filters
+        block = config.block
+        conv = config.conv
 
-        k = args.k
-        act = args.act
-        norm = args.norm
-        bias = args.bias
-        stochastic = args.stochastic
-        epsilon = args.epsilon
-        dropout = args.dropout
+        k = config.k
+        self.k = k
+        act = config.act
+        norm = config.norm
+        bias = config.bias
+        stochastic = config.stochastic
+        epsilon = config.epsilon
+        dropout = config.dropout
 
-        self.n_blocks = args.n_blocks
+        self.n_blocks = config.n_blocks
 
-        c_growth = channels
+        c_growth = 0
 
-        self.knn = DilatedKNN2d(k, 1, stochastic, epsilon)
-        self.head = GraphConv2d(in_channels, channels, conv, act, norm, bias)
+        # self.knn = DilatedKNN2d(k, 1, stochastic, epsilon)
+        self.head = GraphConv1d(in_channels, channels, conv, act, norm, bias, k)
 
         if block.lower() == 'res':
-            self.backbone = Seq(*[ResDynBlock2d(channels, conv, act, norm, bias, k, 1+i, stochastic, epsilon)
-                                  for i in range(self.n_blocks-1)])
-            fusion_dims = int(channels + c_growth * (self.n_blocks - 1))
+            self.backbone = Seq(*[ResGraphBlock1d(channels, conv, act, norm, bias, k)
+                                  for _ in range(self.n_blocks - 1)])
+        elif block.lower() == 'plain':
+            self.backbone = Seq(*[PlainGraphBlock1d(channels, conv, act, norm, bias, k)
+                                  for _ in range(self.n_blocks - 1)])
 
         elif block.lower() == 'dense':
-            self.backbone = Seq(*[DenseDynBlock2d(channels+c_growth*i, c_growth, conv, act, norm, bias,
-                                                  k, 1+i, stochastic, epsilon)
-                                  for i in range(self.n_blocks-1)])
-            fusion_dims = int(
-                (channels + channels + c_growth * (self.n_blocks - 1)) * self.n_blocks // 2)
-        else:
-            stochastic = False
-
-            self.backbone = Seq(*[PlainDynBlock2d(channels, k, 1, conv, act, norm,
-                                                  bias, stochastic, epsilon)
+            c_growth = channels
+            self.backbone = Seq(*[DenseGraphBlock1d(channels + i * c_growth, c_growth, conv, act, norm, bias, k)
                                   for i in range(self.n_blocks - 1)])
-            fusion_dims = int(channels + c_growth * (self.n_blocks - 1))
+        else:
+            raise NotImplementedError
 
-        self.fusion_block = MLP2dLayer([fusion_dims, 1024], act, norm, bias)
-        self.prediction = Seq(*[MLP2dLayer([fusion_dims+1024, 512], act, norm, bias),
-                                MLP2dLayer([512, 256], act, norm, bias, drop=dropout),
-                                MLP2dLayer([256, n_classes], None, None, bias)])
+        fusion_dims = int(channels * self.n_blocks + c_growth * ((1 + self.n_blocks - 1) * (self.n_blocks - 1) / 2))
 
+        self.fusion_block = MLP1dLayer([fusion_dims, 1024], act, norm, bias)
+        self.prediction = Seq(*[MLP1dLayer([fusion_dims+1024, 512], act, norm, bias),
+                                MLP1dLayer([512, 256], act, norm, bias, drop=dropout),
+                                MLP1dLayer([256, n_classes], None, None, bias)])
         self.model_init()
+
+        # List of valid labels (those not ignored in loss)
+        self.valid_labels = np.sort([c for c in lbl_values if c not in ign_lbls])
+        # Choose segmentation loss
+        if len(config.class_w) > 0:
+            class_w = torch.from_numpy(np.array(config.class_w, dtype=np.float32))
+            self.criterion = torch.nn.CrossEntropyLoss(weight=class_w, ignore_index=-1)
+        else:
+            self.criterion = torch.nn.CrossEntropyLoss(ignore_index=-1)
+
+        self.reg_loss = 0.
 
     def model_init(self):
         for m in self.modules():
-            if isinstance(m, torch.nn.Conv2d):
+            if isinstance(m, torch.nn.Conv1d):
                 torch.nn.init.kaiming_normal_(m.weight)
                 m.weight.requires_grad = True
                 if m.bias is not None:
@@ -64,15 +74,15 @@ class DeepGCN(torch.nn.Module):
 
     def forward(self, batch, config):
         x = batch.features.clone().detach()
-
-        feats = [self.head(x, self.knn(x[:, 0:3]))]
+        edge_index = batch.neighbors[0][:, :self.k].unsqueeze(0)
+        feats = [self.head(x, edge_index)]
         for i in range(self.n_blocks-1):
-            feats.append(self.backbone[i](feats[-1]))
+            feats.append(self.backbone[i]((feats[-1], edge_index))[0])
         feats = torch.cat(feats, dim=1)
 
-        fusion = torch.max_pool2d(self.fusion_block(feats), kernel_size=[feats.shape[2], feats.shape[3]])
-        fusion = torch.repeat_interleave(fusion, repeats=feats.shape[2], dim=2)
-        return self.prediction(torch.cat((fusion, feats), dim=1)).squeeze(-1)
+        fusion, _ = torch.max(self.fusion_block(feats), dim=0, keepdim=True)
+        fusion = fusion.repeat(feats.shape[0], 1)
+        return self.prediction(torch.cat((fusion, feats), dim=1))
 
     def loss(self, outputs, labels):
         """

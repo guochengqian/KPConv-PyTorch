@@ -190,7 +190,7 @@ class Config:
     # DeepGCN parameters
     in_channels = 5
     n_classes = 13
-    n_filters = 64
+    n_filters = 64   # todo: for debugging.
 
     block = 'res'
     conv = 'edge'

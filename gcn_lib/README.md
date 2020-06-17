@@ -6,6 +6,8 @@ For now, it is mainly used for point cloud processing.
 Later, gcn_lib will include the GCN operations for image processing as well. 
 gcn_lib is maintained by [Guocheng Qian](https://www.gcqian.com/). 
 
+# todo: add sparse data support!
+
 ## Introduction
 
 This repository contains the implementation of multiple **graph convolutions** and useful modules in [PyTorch](https://pytorch.org/).

@@ -15,7 +15,14 @@ def get_center_feature(inputs, k):
     :param k:
     :return:
     """
-    inputs = inputs.repeat(1, 1, k, 1)
+
+    if len(inputs.shape) == 4:
+        # for torch_vertex2d
+        inputs = inputs.repeat(1, 1, 1, k)
+
+    else:
+        # for torch_vertex1d
+        inputs = inputs.unsqueeze(-1).repeat(1, 1, k)
     return inputs
 
 
@@ -36,7 +43,7 @@ def batched_index_select(inputs, idx):
 
     x = inputs.transpose(2, 1).contiguous()
     feature = x.view(batch_size * num_vertices, -1)[idx, :]
-    feature = feature.view(batch_size, num_vertices, k, num_dims).permute(0, 3, 2, 1).contiguous()
+    feature = feature.view(batch_size, num_vertices, k, num_dims).permute(0, 2, 3, 1).contiguous()
     return feature
 
 
