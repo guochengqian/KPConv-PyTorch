@@ -112,7 +112,8 @@ class ModelTrainer:
         # Path of the result folder
         if config.saving:
             if config.saving_path is None:
-                config.saving_path = time.strftime('results/Log_%Y-%m-%d_%H-%M-%S', time.gmtime())
+                timestamp = time.strftime('%Y%m%d-%H%M%S')
+                config.saving_path = 'results/Log_{}_{}'.format(config.model, timestamp)
             if not exists(config.saving_path):
                 makedirs(config.saving_path)
                 print('creating folder at {}'.format(config.saving_path))

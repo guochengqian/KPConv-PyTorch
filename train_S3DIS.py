@@ -246,6 +246,8 @@ if __name__ == '__main__':
 
     # Initialize configuration class
     config = S3DISConfig()
+    config.model = args.model
+
     if previous_training_path:
         config.load(os.path.join('results', previous_training_path))
         config.saving_path = None
