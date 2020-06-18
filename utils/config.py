@@ -188,7 +188,7 @@ class Config:
     saving_path = None
 
     # DeepGCN parameters
-    in_channels = 5
+    in_channels = 4
     n_classes = 13
     n_filters = 64   # todo: for debugging.
     n_blocks = 14   # resGCN-14.
@@ -197,7 +197,7 @@ class Config:
     conv = 'edge'
     k = 16
     act = 'relu'
-    norm = None
+    norm = True
     bias = True
 
     stochastic = True

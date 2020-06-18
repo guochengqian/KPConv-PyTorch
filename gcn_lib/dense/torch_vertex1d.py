@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from .torch_nn import Conv1dLayer, get_center_feature, act_layer, norm_layer1d, glorot
+from .torch_nn1d import MLP1dLayer, Conv1dLayer, get_center_feature, act_layer, glorot
 from .torch_edge import DilatedKNN2d, add_self_loops, remove_self_loops
 import torch.nn.functional as F
 
@@ -13,7 +13,6 @@ point cloud may have different size, here a mini-batch of points are stacked to 
 However, the number of neighbors for each point is the same. (this is the main difference with gcn_lib/sparse. )
 
 """
-
 
 class MRConv1d(nn.Module):
     r"""Revised Max-Relative Graph Convolution layer (with activation, batch normalization)

@@ -1,6 +1,6 @@
 import torch
-from gcn_lib.dense import MLP1dLayer, DilatedKNN2d
-from gcn_lib.dense.torch_vertex1d import GraphConv1d, DenseGraphBlock1d, ResGraphBlock1d, PlainGraphBlock1d
+from gcn_lib.dense import DilatedKNN2d
+from gcn_lib.dense.torch_vertex1d import MLP1dLayer, GraphConv1d, DenseGraphBlock1d, ResGraphBlock1d, PlainGraphBlock1d
 from torch.nn import Sequential as Seq
 import numpy as np
 
@@ -73,7 +73,7 @@ class DeepGCN(torch.nn.Module):
                     m.bias.requires_grad = True
 
     def forward(self, batch, config):
-        x = batch.features.clone().detach()
+        x = batch.features.clone().detach()[:, 1:]
         edge_index = batch.neighbors[0][:, :self.k].unsqueeze(0)
         feats = [self.head(x, edge_index)]
         for i in range(self.n_blocks-1):
