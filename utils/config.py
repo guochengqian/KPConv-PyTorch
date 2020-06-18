@@ -191,11 +191,11 @@ class Config:
     in_channels = 4
     n_classes = 13
     n_filters = 64   # todo: for debugging.
-    n_blocks = 14   # resGCN-14.
+    n_blocks = 5   # resGCN-14.
 
     block = 'res'
     conv = 'edge'
-    k = 16
+    k = 29
     act = 'relu'
     norm = True
     bias = True
