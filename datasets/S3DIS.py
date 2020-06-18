@@ -405,7 +405,7 @@ class S3DISDataset(PointCloudDataset):
             pass
         elif self.config.in_features_dim == 4:
             stacked_features = np.hstack((stacked_features, features[:, :3]))
-        elif self.config.in_features_dim == 5:
+        elif self.config.in_features_dim == 5:  # todo: I do not understand. why stack 1
             stacked_features = np.hstack((stacked_features, features))
         else:
             raise ValueError('Only accepted input dimensions are 1, 4 and 7 (without and with XYZ)')
