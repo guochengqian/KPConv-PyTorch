@@ -73,7 +73,7 @@ class DeepGCN(torch.nn.Module):
                     m.bias.requires_grad = True
 
     def forward(self, batch, config):
-        x = batch.features.clone().detach()[:, 1:]
+        x = batch.features.clone().detach()
         edge_index = batch.neighbors[0][:, :self.k].unsqueeze(0)
         feats = [self.head(x, edge_index)]
         for i in range(self.n_blocks-1):

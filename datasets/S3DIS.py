@@ -359,7 +359,9 @@ class S3DISDataset(PointCloudDataset):
                 input_colors *= 0
 
             # Get original height as additional feature
-            input_features = np.hstack((input_colors, input_points[:, 2:] + center_point[:, 2:])).astype(np.float32)
+            # todo
+            # input_features = np.hstack((input_colors, input_points[:, 2:] + center_point[:, 2:])).astype(np.float32)
+            input_features = np.hstack((input_colors, input_points[:, :] + center_point[:, :])).astype(np.float32)
 
             t += [time.time()]
 
@@ -390,7 +392,7 @@ class S3DISDataset(PointCloudDataset):
         ###################
 
         stacked_points = np.concatenate(p_list, axis=0)
-        features = np.concatenate(f_list, axis=0)
+        stacked_features = np.concatenate(f_list, axis=0)
         labels = np.concatenate(l_list, axis=0)
         point_inds = np.array(i_list, dtype=np.int32)
         cloud_inds = np.array(ci_list, dtype=np.int32)
@@ -399,16 +401,16 @@ class S3DISDataset(PointCloudDataset):
         scales = np.array(s_list, dtype=np.float32)
         rots = np.stack(R_list, axis=0)
 
-        # Input features
-        stacked_features = np.ones_like(stacked_points[:, :1], dtype=np.float32)
-        if self.config.in_features_dim == 1:
-            pass
-        elif self.config.in_features_dim == 4:
-            stacked_features = np.hstack((stacked_features, features[:, :3]))
-        elif self.config.in_features_dim == 5:  # todo: I do not understand. why stack 1
-            stacked_features = np.hstack((stacked_features, features))
-        else:
-            raise ValueError('Only accepted input dimensions are 1, 4 and 7 (without and with XYZ)')
+        # # Input features
+        # stacked_features = np.ones_like(stacked_points[:, :1], dtype=np.float32)
+        # if self.config.in_features_dim == 1:
+        #     pass
+        # elif self.config.in_features_dim == 4:
+        #     stacked_features = np.hstack((stacked_features, features[:, :3]))
+        # elif self.config.in_features_dim == 5:  # todo: I do not understand. why stack 1
+        #     stacked_features = np.hstack((stacked_features, features))
+        # else:
+        #     raise ValueError('Only accepted input dimensions are 1, 4 and 7 (without and with XYZ)')
 
         #######################
         # Create network inputs
@@ -550,7 +552,9 @@ class S3DISDataset(PointCloudDataset):
                 input_colors *= 0
 
             # Get original height as additional feature
-            input_features = np.hstack((input_colors, input_points[:, 2:] + center_point[:, 2:])).astype(np.float32)
+            # todo
+            # input_features = np.hstack((input_colors, input_points[:, 2:] + center_point[:, 2:])).astype(np.float32)
+            input_features = np.hstack((input_colors, input_points[:, :] + center_point[:, :])).astype(np.float32)
 
             # Stack batch
             p_list += [input_points]

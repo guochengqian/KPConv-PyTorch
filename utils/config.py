@@ -188,7 +188,7 @@ class Config:
     saving_path = None
 
     # DeepGCN parameters
-    in_channels = 4
+    in_channels = 6
     n_classes = 13
     n_filters = 64   # todo: for debugging.
     n_blocks = 5   # resGCN-14.
