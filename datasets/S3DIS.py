@@ -130,7 +130,7 @@ class S3DISDataset(PointCloudDataset):
         # Prepare ply files
         ###################
 
-        self.prepare_S3DIS_ply()
+        self.prepare_S3DIS_ply()    # load the original s3dis
 
         ################
         # Load ply files
@@ -178,7 +178,7 @@ class S3DISDataset(PointCloudDataset):
         self.batch_limit = torch.tensor([1], dtype=torch.float32)
         self.batch_limit.share_memory_()
 
-        # Initialize potentials
+        # Initialize potentials. todo: whats potential?
         if use_potentials:
             self.potentials = []
             self.min_potentials = []
@@ -772,7 +772,7 @@ class S3DISDataset(PointCloudDataset):
             self.input_colors += [sub_colors]
             self.input_labels += [sub_labels]
 
-            size = sub_colors.shape[0] * 4 * 7
+            size = sub_colors.shape[0] * 4 * 7  # each float 4 bytes
             print('{:.1f} MB loaded in {:.1f}s'.format(size * 1e-6, time.time() - t0))
 
         ############################
@@ -786,7 +786,7 @@ class S3DISDataset(PointCloudDataset):
             # Restart timer
             t0 = time.time()
 
-            pot_dl = self.config.in_radius / 10
+            pot_dl = self.config.in_radius / 10  # todo: why divided by 10?
             cloud_ind = 0
 
             for i, file_path in enumerate(self.files):

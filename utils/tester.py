@@ -81,7 +81,7 @@ class ModelTester:
     # Test main methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def cloud_segmentation_test(self, net, test_loader, config, num_votes=100, debug=False):
+    def cloud_segmentation_test(self, net, test_loader, config, num_votes=1, debug=False):  # todo: what if only vote once?
         """
         Test method for cloud segmentation models
         """
@@ -120,7 +120,7 @@ class ModelTester:
 
         # If on validation directly compute score
         if test_loader.dataset.set == 'validation':
-            val_proportions = np.zeros(nc_model, dtype=np.float32)
+            val_proportions = np.zeros(nc_model, dtype=np.float32)  # val_proportions: the label proportions
             i = 0
             for label_value in test_loader.dataset.label_values:
                 if label_value not in test_loader.dataset.ignored_labels:
@@ -186,7 +186,7 @@ class ModelTester:
                         inds = inds[mask]
                         probs = probs[mask]
 
-                    # Update current probs in whole cloud
+                    # Update current probs in whole cloud. move average.
                     self.test_probs[c_i][inds] = test_smooth * self.test_probs[c_i][inds] + (1 - test_smooth) * probs
                     i0 += length
 
@@ -208,7 +208,7 @@ class ModelTester:
                                          1000 * (mean_dt[2])))
 
             # Update minimum od potentials
-            new_min = torch.min(test_loader.dataset.min_potentials)
+            new_min = torch.min(test_loader.dataset.min_potentials) # what's the min_potentials.
             print('Test epoch {:d}, end. Min potential = {:.1f}'.format(test_epoch, new_min))
             #print([np.mean(pots) for pots in test_loader.dataset.potentials])
 
